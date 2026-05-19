@@ -1,0 +1,344 @@
+@page "/breeding"
+
+@using Goatify.Core.Models
+@using System.Net.Http.Json
+@using MudBlazor
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-6 breeding-page">
+
+    <!-- HEADER -->
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-6 flex-wrap">
+
+        <div>
+
+            <MudText Typo="Typo.h4" Class="fw-bold">
+                Breeding Management
+            </MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Track breeding cycles, delivery dates, and offspring records
+            </MudText>
+
+        </div>
+
+        <MudButton Href="/breeding/add"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Class="rounded-pill px-6">
+
+            Add Breeding
+
+        </MudButton>
+
+    </MudStack>
+
+    <!-- STATS -->
+    <MudGrid Class="mb-5" Spacing="3">
+
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="pa-5 stat-card" Elevation="0">
+
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Fence" />
+                    </MudAvatar>
+
+                    <div>
+
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Total Breeding Records
+                        </MudText>
+
+                        <MudText Typo="Typo.h5" Class="fw-bold">
+                            @totalItems
+                        </MudText>
+
+                    </div>
+
+                </MudStack>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- TOOLBAR -->
+    <MudPaper Class="pa-4 mb-4 toolbar-card" Elevation="0">
+
+        <MudGrid AlignItems="AlignItems.Center" Spacing="2">
+
+            <MudItem xs="12" md="6">
+
+                <MudTextField @bind-Value="search"
+                              Placeholder="Search breeding records..."
+                              Variant="Variant.Outlined"
+                              Immediate="true"
+                              DebounceInterval="400"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Clearable="true"
+                              FullWidth=true
+                              OnDebounceIntervalElapsed="Reload" />
+
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+
+                <MudStack Row="true"
+                          Justify="Justify.FlexEnd"
+                          Spacing="2"
+                          Class="flex-wrap">
+
+                    <MudButton Href="/breeding/deleted"
+                               Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.DeleteOutline">
+
+                        Deleted Records
+
+                    </MudButton>
+
+                </MudStack>
+
+            </MudItem>
+
+        </MudGrid>
+
+    </MudPaper>
+
+    <!-- TABLE -->
+    <MudPaper Class="table-card" Elevation="0">
+
+        <MudTable T="Breeding"
+                  ServerData="LoadServerData"
+                  @ref="table"
+                  Hover="true"
+                  Loading="@loading"
+                  Breakpoint="Breakpoint.Sm"
+                  RowsPerPage="@pageSize"
+                  RowsPerPageChanged="OnPageSizeChanged"
+                  Class="modern-table">
+
+            <HeaderContent>
+
+                <MudTh>Male Goat</MudTh>
+                <MudTh>Female Goat</MudTh>
+                <MudTh>Breeding Date</MudTh>
+                <MudTh>Delivery</MudTh>
+                <MudTh>Kids Born</MudTh>
+                <MudTh Align="Align.Center">Actions</MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd DataLabel="Male Goat">
+                    <MudChip T="int" Color="Color.Primary" Variant="Variant.Text" Size="Size.Small">
+                        #@context.MaleGoatId
+                    </MudChip>
+                </MudTd>
+
+                <MudTd DataLabel="Female Goat">
+                    <MudChip T="int" Color="Color.Info" Variant="Variant.Text" Size="Size.Small">
+                        #@context.FemaleGoatId
+                    </MudChip>
+                </MudTd>
+
+                <MudTd DataLabel="Breeding Date">
+                    @context.BreedingDate?.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Delivery">
+                    @context.ExpectedDeliveryDate?.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Kids Born">
+
+                    <MudChip T="int?" Color="@(context.KidsBorn > 0 ? Color.Success : Color.Warning)"
+                             Variant="Variant.Text"
+                             Size="Size.Small">
+
+                        @context.KidsBorn
+
+                    </MudChip>
+
+                </MudTd>
+
+                <MudTd DataLabel="Actions" Align="Align.Center">
+
+                    <MudStack Row="true" Spacing="1" Justify="Justify.Center">
+
+                        <MudTooltip Text="Edit">
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
+                                           Variant="Variant.Text"
+                                           OnClick="@(()=>Edit(context.Id))" />
+
+                        </MudTooltip>
+
+                        <MudTooltip Text="Delete">
+
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                           Color="Color.Error"
+                                           Variant="Variant.Text"
+                                           OnClick="@(()=>ConfirmDelete(context.Id))" />
+
+                        </MudTooltip>
+
+                    </MudStack>
+
+                </MudTd>
+
+            </RowTemplate>
+
+            <NoRecordsContent>
+
+                <MudStack Class="pa-10" AlignItems="AlignItems.Center">
+
+                    <MudIcon Icon="@Icons.Material.Filled.Fence"
+                             Size="Size.Large"
+                             Color="Color.Warning" />
+
+                    <MudText Typo="Typo.h6" Class="mt-2">
+                        No breeding records found
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Start by adding your first breeding cycle
+                    </MudText>
+
+                </MudStack>
+
+            </NoRecordsContent>
+
+            <LoadingContent>
+
+                <MudStack Class="pa-6">
+                    <MudSkeleton Height="45px" />
+                    <MudSkeleton Height="45px" />
+                    <MudSkeleton Height="45px" />
+                </MudStack>
+
+            </LoadingContent>
+
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20 }" />
+            </PagerContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>
+
+<style>
+
+    .breeding-page {
+        background-color: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .stat-card,
+    .toolbar-card,
+    .table-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #eef2f7;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .modern-table .mud-table-head th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .modern-table .mud-table-body tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .rounded-pill {
+        border-radius: 999px !important;
+    }
+
+</style>
+
+@code {
+
+    private MudTable<Breeding>? table;
+    private bool loading;
+    private string search = "";
+    private int pageSize = 10;
+    private int totalItems;
+
+    private async Task<TableData<Breeding>> LoadServerData(TableState state, CancellationToken token)
+    {
+        loading = true;
+
+        var result = await Http.GetFromJsonAsync<PagedResult<Breeding>>(
+            $"api/breeding/paged?page={state.Page + 1}&pageSize={state.PageSize}&search={search}",
+            token);
+
+        totalItems = result?.TotalCount ?? 0;
+        loading = false;
+
+        await InvokeAsync(StateHasChanged);
+
+        return new TableData<Breeding>
+        {
+            Items = result?.Items ?? new(),
+            TotalItems = totalItems
+        };
+    }
+
+    private async Task Reload()
+    {
+        if (table != null)
+            await table.ReloadServerData();
+    }
+
+    private void Edit(int id)
+    {
+        Nav.NavigateTo($"/breeding/edit/{id}");
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        var result = await DialogService.ShowMessageBoxAsync(
+            "Confirm Delete",
+            "Are you sure you want to delete this breeding record?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var response = await Http.DeleteAsync($"api/breeding/{id}");
+
+            if (response.IsSuccessStatusCode)
+                await Reload();
+        }
+    }
+
+    private async Task OnPageSizeChanged(int size)
+    {
+        pageSize = size;
+        await table!.ReloadServerData();
+    }
+}
