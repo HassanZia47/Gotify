@@ -1,0 +1,20 @@
+@page "/logout"
+@using MudBlazor
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-10">
+    <MudPaper Class="pa-6">
+        <MudText Typo="Typo.h5">Signing out...</MudText>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.Logout();
+        Snackbar.Add("Logged out", Severity.Info);
+        Nav.NavigateTo("/login", true);
+    }
+}

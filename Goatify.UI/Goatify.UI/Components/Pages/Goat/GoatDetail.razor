@@ -1,0 +1,862 @@
+﻿@page "/goat/add"
+@page "/goat/edit/{Id:int}"
+@rendermode InteractiveServer
+
+@using Goatify.Core.Models
+@using Goatify.Core.Enums
+@using System.Net.Http.Json
+@using MudBlazor
+@using Goatify.UI.Services
+
+@inject HttpClient Http
+@inject AppApiClient Api
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-6 bill-form-page">
+
+    <!-- HEADER -->
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-6 flex-wrap">
+
+        <div>
+
+            <MudText Typo="Typo.h4" Class="fw-bold">
+                @(Id.HasValue ? "✏️ Edit Goat" : "➕ Add Goat")
+            </MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Manage goat profile, breeding, health and financial tracking
+            </MudText>
+
+        </div>
+
+        <MudChip T="string"
+                 Color="Color.Primary"
+                 Variant="Variant.Text">
+
+            Goat Management
+
+        </MudChip>
+
+    </MudStack>
+
+    <MudGrid Spacing="4">
+
+        <!-- LEFT -->
+        <MudItem xs="12" md="8">
+
+            <MudPaper Class="pa-6 form-card" Elevation="0">
+
+                <MudForm @ref="form">
+
+                    <!-- BASIC INFO -->
+                    <MudStack Row="true"
+                              Spacing="2"
+                              AlignItems="AlignItems.Center"
+                              Class="mb-4">
+
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Pets" />
+                        </MudAvatar>
+
+                        <MudText Typo="Typo.h6">
+                            Basic Information
+                        </MudText>
+
+                    </MudStack>
+
+                    <MudGrid Spacing="3">
+
+                        <!-- GENDER -->
+                        <MudItem xs="12" sm="6">
+
+                            <MudSelect T="GoatGender"
+                                       Label="Gender"
+                                       Variant="Variant.Outlined"
+                                       @bind-Value="goat.Gender"
+                                       Required="true"
+                                       RequiredError="Gender is required"
+                                       FullWidth>
+
+                                <MudSelectItem Value="GoatGender.Male">
+                                    Male
+                                </MudSelectItem>
+
+                                <MudSelectItem Value="GoatGender.Female">
+                                    Female
+                                </MudSelectItem>
+
+                            </MudSelect>
+
+                        </MudItem>
+
+                        <!-- STATUS -->
+                        <MudItem xs="12" sm="6">
+
+                            <MudSelect T="GoatStatus"
+                                       Label="Status"
+                                       Variant="Variant.Outlined"
+                                       @bind-Value="goat.Status"
+                                       @bind-Value:after="OnStatusChanged"
+                                       Required="true"
+                                       RequiredError="Status is required"
+                                       FullWidth>
+
+                                <MudSelectItem Value="GoatStatus.Owned">
+                                    Owned
+                                </MudSelectItem>
+
+                                <MudSelectItem Value="GoatStatus.Sold">
+                                    Sold
+                                </MudSelectItem>
+
+                                <MudSelectItem Value="GoatStatus.Dead">
+                                    Dead
+                                </MudSelectItem>
+
+                            </MudSelect>
+
+                        </MudItem>
+
+                    </MudGrid>
+
+                    <MudDivider Class="my-5" />
+
+                    <!-- FINANCIAL -->
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        💰 Financial Details
+                    </MudText>
+
+                    <MudGrid Spacing="3">
+
+                        <MudItem xs="12" sm="6">
+
+                            <MudNumericField T="decimal"
+                                             @bind-Value="goat.PurchasePrice"
+                                             Label="Purchase Price"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             RequiredError="Purchase price is required"
+                                             FullWidth
+                                             Validation="@( (decimal v) => v <= 0 ? "Must be greater than 0" : null )" />
+
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+
+                            <MudDatePicker @bind-Date="goat.PurchaseDate"
+                                           Label="Purchase Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           RequiredError="Purchase date is required"
+                                           FullWidth />
+
+                        </MudItem>
+
+                    </MudGrid>
+
+                    <MudDivider Class="my-5" />
+
+                    <!-- SALE -->
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        🛒 Sale Details
+                    </MudText>
+
+                    <MudGrid Spacing="3">
+
+                        <MudItem xs="12" sm="6">
+
+                            <MudNumericField T="decimal?"
+                                             @bind-Value="goat.SalePrice"
+                                             Label="Sale Price"
+                                             Variant="Variant.Outlined"
+                                             Immediate="true"
+                                             Validation="ValidateSalePrice"
+                                             FullWidth />
+
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+
+                            <MudDatePicker T="DateTime?"
+                                           @bind-Date="goat.SellDate"
+                                           Label="Sale Date"
+                                           Variant="Variant.Outlined"
+                                           Validation="ValidateSaleDate"
+                                           FullWidth />
+
+                        </MudItem>
+
+                    </MudGrid>
+
+                    <MudDivider Class="my-5" />
+
+                    <!-- NOTES -->
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        📝 Notes
+                    </MudText>
+
+                    <MudTextField T="string"
+                                  @bind-Value="goat.Notes"
+                                  Lines="4"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="Optional notes about this goat..."
+                                  FullWidth />
+
+                </MudForm>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- RIGHT -->
+        <MudItem xs="12" md="4">
+
+            <!-- SUMMARY -->
+            <MudPaper Class="pa-5 summary-card mb-4" Elevation="0">
+
+                <MudText Typo="Typo.h6" Class="fw-bold mb-3">
+                    Live Summary
+                </MudText>
+
+                <MudDivider Class="mb-3" />
+
+                <MudStack Spacing="2">
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudText Typo="Typo.body2">
+                            Status
+                        </MudText>
+
+                        <MudChip T="string"
+                                 Color="@GetStatusColor()"
+                                 Variant="Variant.Text">
+
+                            @goat.Status.ToString()
+
+                        </MudChip>
+
+                    </MudPaper>
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudText Typo="Typo.body2">
+                            Purchase Price
+                        </MudText>
+
+                        <MudText Typo="Typo.body1" Class="fw-semibold">
+                            Rs. @goat.PurchasePrice.ToString("0.00")
+                        </MudText>
+
+                    </MudPaper>
+
+                    @if (goat.SalePrice.HasValue)
+                    {
+                        <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                            <MudText Typo="Typo.body2">
+                                Sale Price
+                            </MudText>
+
+                            <MudText Typo="Typo.body1" Class="fw-semibold">
+                                Rs. @goat.SalePrice.Value.ToString("0.00")
+                            </MudText>
+
+                        </MudPaper>
+
+                        <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                            <MudText Typo="Typo.body2">
+                                Profit
+                            </MudText>
+
+                            <MudChip T="string"
+                                     Color="Color.Success"
+                                     Variant="Variant.Text">
+
+                                Rs. @((goat.SalePrice.Value - goat.PurchasePrice).ToString("0.00"))
+
+                            </MudChip>
+
+                        </MudPaper>
+                    }
+
+                </MudStack>
+
+            </MudPaper>
+
+            <!-- ACTIONS -->
+            <MudPaper Class="pa-5 action-card" Elevation="0">
+
+                <MudButton FullWidth
+                           Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           OnClick="Save"
+                           Disabled="@isSaving"
+                           StartIcon="@Icons.Material.Filled.Save">
+
+                    @(isSaving ? "Saving..." : (Id.HasValue ? "Update Goat" : "Save Goat"))
+
+                </MudButton>
+
+                <MudButton FullWidth
+                           Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           Class="mt-3"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="@(()=> Nav.NavigateTo("/goat"))">
+
+                    Cancel
+
+                </MudButton>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+    @if (Id.HasValue)
+    {
+    <!-- MEDICATIONS -->
+    <MudPaper Class="pa-5 mt-6 table-card" Elevation="0">
+
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center"
+                  Justify="Justify.SpaceBetween"
+                  Class="mb-2 flex-wrap">
+
+            <div>
+
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    💊 Assigned Medications
+                </MudText>
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Medicines currently assigned to this goat
+                </MudText>
+
+            </div>
+
+            <MudChip T="int"
+                     Color="Color.Primary"
+                     Variant="Variant.Text">
+
+                @medTotal Medications
+
+            </MudChip>
+
+        </MudStack>
+
+        <MudTextField T="string"
+                      @bind-Value="medSearch"
+                      Placeholder="Search medications..."
+                      Immediate="true"
+                      DebounceInterval="400"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      OnDebounceIntervalElapsed="ReloadMedications"
+                      Variant="Variant.Outlined"
+                      FullWidth
+                      Class="mb-4" />
+
+        <MudTable T="Medication"
+                  ServerData="LoadMedications"
+                  @ref="medTable"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Bordered="false"
+                  Breakpoint="Breakpoint.Sm"
+                  LoadingProgressColor="Color.Primary"
+                  RowsPerPage="@medPageSize"
+                  RowsPerPageChanged="OnMedPageSizeChanged">
+
+            <HeaderContent>
+
+                <MudTh>Name</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Notes</MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd DataLabel="Name">
+                    @context.Name
+                </MudTd>
+
+                <MudTd DataLabel="Type">
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Info"
+                             Variant="Variant.Text">
+
+                        @context.Type
+
+                    </MudChip>
+
+                </MudTd>
+
+                <MudTd DataLabel="Notes">
+                    @context.Notes
+                </MudTd>
+
+            </RowTemplate>
+
+            <NoRecordsContent>
+
+                <MudText Class="pa-4">
+                    No medications found
+                </MudText>
+
+            </NoRecordsContent>
+
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20 }" />
+            </PagerContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+    <!-- BREEDING -->
+    <MudPaper Class="pa-5 mt-6 table-card" Elevation="0">
+
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center"
+                  Justify="Justify.SpaceBetween"
+                  Class="mb-2 flex-wrap">
+
+            <div>
+
+                <MudText Typo="Typo.h6" Class="fw-bold">
+                    🐐 Mating History
+                </MudText>
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Breeding and mating records
+                </MudText>
+
+            </div>
+
+            <MudChip T="int"
+                     Color="Color.Secondary"
+                     Variant="Variant.Text">
+
+                @breedingTotal Records
+
+            </MudChip>
+
+        </MudStack>
+
+        <MudTextField T="string"
+                      @bind-Value="breedingSearch"
+                      Placeholder="Search breeding history..."
+                      Immediate="true"
+                      DebounceInterval="400"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      OnDebounceIntervalElapsed="ReloadBreeding"
+                      Variant="Variant.Outlined"
+                      FullWidth
+                      Class="mb-4" />
+
+        <MudTable T="Breeding"
+                  ServerData="LoadBreedingHistory"
+                  @ref="breedingTable"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  LoadingProgressColor="Color.Primary"
+                  RowsPerPage="@breedingPageSize"
+                  RowsPerPageChanged="OnBreedingPageSizeChanged">
+
+            <HeaderContent>
+
+                <MudTh>Role</MudTh>
+                <MudTh>Partner Goat</MudTh>
+                <MudTh>Breeding Date</MudTh>
+                <MudTh>Expected Delivery</MudTh>
+                <MudTh>Notes</MudTh>
+
+            </HeaderContent>
+
+            <RowTemplate>
+
+                <MudTd DataLabel="Role">
+
+                    @if (context.MaleGoatId == goat.Id)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Info"
+                                 Size="Size.Small">
+
+                            Male
+
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Secondary"
+                                 Size="Size.Small">
+
+                            Female
+
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+                <MudTd DataLabel="Partner Goat">
+
+                    @if (context.MaleGoatId == goat.Id)
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+
+                            #@context.FemaleGoatId
+
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+
+                            #@context.MaleGoatId
+
+                        </MudChip>
+                    }
+
+                </MudTd>
+
+                <MudTd DataLabel="Breeding Date">
+                    @context.BreedingDate?.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Expected Delivery">
+                    @context.ExpectedDeliveryDate?.ToString("dd MMM yyyy")
+                </MudTd>
+
+                <MudTd DataLabel="Notes">
+                    @context.Notes
+                </MudTd>
+
+            </RowTemplate>
+
+            <NoRecordsContent>
+
+                <MudText Class="pa-4">
+                    No breeding records found
+                </MudText>
+
+            </NoRecordsContent>
+
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20 }" />
+            </PagerContent>
+
+        </MudTable>
+
+    </MudPaper>
+    }
+
+</MudContainer>
+
+<style>
+
+    .goat-form-page {
+        background-color: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .form-card,
+    .summary-card,
+    .action-card,
+    .table-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #eef2f7;
+    }
+
+    .info-box {
+        background-color: #f8fafc;
+        border-radius: 16px;
+        border: 1px solid #eef2f7;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .fw-semibold {
+        font-weight: 600;
+    }
+
+    .mud-table {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+</style>
+
+@code {
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    private MudForm? form;
+
+    private bool isSaving = false;
+
+    private MudTable<Medication>? medTable;
+    private string medSearch = "";
+    private int medPageSize = 5;
+    private int medTotal;
+
+    private MudTable<Breeding>? breedingTable;
+    private string breedingSearch = "";
+    private int breedingPageSize = 5;
+    private int breedingTotal;
+
+    private Goat goat = new()
+    {
+        PurchaseDate = DateTime.Now,
+        Status = GoatStatus.Owned
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (Id.HasValue)
+            {
+                var result = await Api.GetAsync<Goat>($"api/goat/{Id}");
+
+                if (result.IsSuccess && result.Value != null)
+                    goat = result.Value;
+                else if (!result.IsSuccess)
+                    Snackbar.Add(result.ErrorMessage ?? "Unable to load goat.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Error loading goat: {ex.Message}",
+                Severity.Error);
+        }
+    }
+
+    private async Task Save()
+    {
+        if (form != null)
+        {
+            await form.Validate();
+
+            if (!form.IsValid)
+                return;
+        }
+
+        try
+        {
+            isSaving = true;
+
+            if (Id.HasValue)
+            {
+                var result = await Api.PutAsync<Goat>($"api/goat/{Id}", goat);
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Goat updated successfully", Severity.Success);
+                    Nav.NavigateTo("/goat");
+                    return;
+                }
+
+                Snackbar.Add(result.ErrorMessage ?? "Unable to update goat.", Severity.Error);
+            }
+            else
+            {
+                var result = await Api.PostAsync<Goat>("api/goat", goat);
+
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Goat created successfully", Severity.Success);
+                    Nav.NavigateTo("/goat");
+                    return;
+                }
+
+                Snackbar.Add(result.ErrorMessage ?? "Unable to create goat.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string? ValidateSalePrice(decimal? value)
+    {
+        if (goat.Status == GoatStatus.Sold)
+        {
+            if (!value.HasValue || value <= 0)
+                return "Sale Price is required for sold goats.";
+        }
+
+        return null;
+    }
+
+    private string? ValidateSaleDate(DateTime? value)
+    {
+        if (goat.Status == GoatStatus.Sold)
+        {
+            if (!value.HasValue)
+                return "Sale Date is required for sold goats.";
+        }
+
+        return null;
+    }
+
+    private Color GetStatusColor()
+    {
+        return goat.Status switch
+        {
+            GoatStatus.Owned => Color.Success,
+            GoatStatus.Sold => Color.Info,
+            GoatStatus.Dead => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private void OnStatusChanged()
+    {
+        StateHasChanged();
+    }
+
+    private async Task ReloadMedications()
+    {
+        if (medTable != null)
+            await medTable.ReloadServerData();
+    }
+
+    private async Task OnMedPageSizeChanged(int size)
+    {
+        medPageSize = size;
+
+        if (medTable != null)
+            await medTable.ReloadServerData();
+    }
+
+    private async Task<TableData<Medication>> LoadMedications(
+        TableState state,
+        CancellationToken token)
+    {
+        try
+        {
+            var url =
+                $"api/goat/{Id}/medications-paged" +
+                $"?page={state.Page + 1}" +
+                $"&pageSize={state.PageSize}" +
+                $"&search={medSearch}";
+
+            var result =
+                await Http.GetFromJsonAsync<PagedResult<Medication>>(
+                    url,
+                    token);
+
+            medTotal = result?.TotalCount ?? 0;
+
+            await InvokeAsync(StateHasChanged);
+
+            return new TableData<Medication>
+            {
+                Items = result?.Items ?? new List<Medication>(),
+                TotalItems = medTotal
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Medication load error: {ex.Message}",
+                Severity.Error);
+
+            return new TableData<Medication>
+            {
+                Items = new List<Medication>(),
+                TotalItems = 0
+            };
+        }
+    }
+
+    private async Task<TableData<Breeding>> LoadBreedingHistory(
+        TableState state,
+        CancellationToken token)
+    {
+        try
+        {
+            var url =
+                $"api/breeding/{Id}/breeding-paged" +
+                $"?page={state.Page + 1}" +
+                $"&pageSize={state.PageSize}" +
+                $"&search={breedingSearch}";
+
+            var result =
+                await Http.GetFromJsonAsync<PagedResult<Breeding>>(
+                    url,
+                    token);
+
+            breedingTotal = result?.TotalCount ?? 0;
+
+            await InvokeAsync(StateHasChanged);
+
+            return new TableData<Breeding>
+            {
+                Items = result?.Items ?? new List<Breeding>(),
+                TotalItems = breedingTotal
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Error loading breeding history: {ex.Message}",
+                Severity.Error);
+
+            return new TableData<Breeding>
+            {
+                Items = new List<Breeding>(),
+                TotalItems = 0
+            };
+        }
+    }
+
+    private async Task ReloadBreeding()
+    {
+        if (breedingTable != null)
+            await breedingTable.ReloadServerData();
+    }
+
+    private async Task OnBreedingPageSizeChanged(int size)
+    {
+        breedingPageSize = size;
+
+        if (breedingTable != null)
+            await breedingTable.ReloadServerData();
+    }
+
+}

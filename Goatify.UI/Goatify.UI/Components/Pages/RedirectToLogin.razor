@@ -1,0 +1,17 @@
+@inject NavigationManager Nav
+@inject AuthService Auth
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.InitializeAsync();
+
+        if (!Auth.IsAuthenticated)
+        {
+            Nav.NavigateTo("/login", true);
+        }
+    }
+}

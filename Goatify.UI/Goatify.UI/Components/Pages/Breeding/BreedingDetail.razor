@@ -1,0 +1,458 @@
+﻿@page "/breeding/add"
+@page "/breeding/edit/{Id:int}"
+@rendermode InteractiveServer
+
+@using Goatify.Core.Models
+@using System.Net.Http.Json
+@using MudBlazor
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-6 bill-form-page">
+
+    <!-- HEADER -->
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-6 flex-wrap">
+
+        <div>
+
+            <MudText Typo="Typo.h4" Class="fw-bold">
+
+                @(Id.HasValue ? "Edit Breeding Record" : "Create Breeding Record")
+
+            </MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+
+                Manage pairing, pregnancy tracking, and delivery details
+
+            </MudText>
+
+        </div>
+
+        <MudChip T="string" Color="@(Id.HasValue ? Color.Info : Color.Success)"
+                 Variant="Variant.Text">
+
+            @(Id.HasValue ? "Editing Mode" : "New Breeding")
+
+        </MudChip>
+
+    </MudStack>
+
+    <MudGrid Spacing="4">
+
+        <!-- LEFT FORM -->
+        <MudItem xs="12" md="8">
+
+            <MudPaper Class="pa-6 form-card" Elevation="0">
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Spacing="2"
+                          Class="mb-5">
+
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.Pets" />
+                    </MudAvatar>
+
+                    <div>
+
+                        <MudText Typo="Typo.h6" Class="fw-semibold">
+                            Breeding Details
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Select goats and enter timeline information
+                        </MudText>
+
+                    </div>
+
+                </MudStack>
+
+                <MudDivider Class="mb-5" />
+
+                <MudForm @ref="form">
+
+                    <MudGrid Spacing="3">
+
+                        <!-- MALE GOAT -->
+                        <MudItem xs="12">
+
+                            <MudAutocomplete T="Goat"
+                                             Label="Male Goat"
+                                             Variant="Variant.Outlined"
+                                             Value="selectedMale"
+                                             ValueChanged="OnMaleChanged"
+                                             SearchFunc="SearchMales"
+                                             ToStringFunc="@(g => g == null ? "" : $"#{g.Id} - {g.Gender}")"
+                                             Clearable="true"
+                                             ResetValueOnEmptyText="true"
+                                             Required="true"
+                                             FullWidth />
+
+                        </MudItem>
+
+                        <!-- FEMALE GOAT -->
+                        <MudItem xs="12">
+
+                            <MudAutocomplete T="Goat"
+                                             Label="Female Goat"
+                                             Variant="Variant.Outlined"
+                                             Value="selectedFemale"
+                                             ValueChanged="OnFemaleChanged"
+                                             SearchFunc="SearchFemales"
+                                             ToStringFunc="@(g => g == null ? "" : $"#{g.Id} - {g.Gender}")"
+                                             Clearable="true"
+                                             ResetValueOnEmptyText="true"
+                                             Required="true"
+                                             FullWidth />
+
+                        </MudItem>
+
+                        <!-- DATES -->
+                        <MudItem xs="12" md="6">
+
+                            <MudDatePicker @bind-Date="model.BreedingDate"
+                                           Label="Breeding Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           FullWidth />
+
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+
+                            <MudDatePicker @bind-Date="model.ExpectedDeliveryDate"
+                                           Label="Expected Delivery"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           FullWidth />
+
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+
+                            <MudDatePicker @bind-Date="model.ActualDeliveryDate"
+                                           Label="Actual Delivery"
+                                           Variant="Variant.Outlined"
+                                           FullWidth />
+
+                        </MudItem>
+
+                        <!-- KIDS -->
+                        <MudItem xs="12" md="6">
+
+                            <!-- FIXED: was wrong property (@bind-Date ❌) -->
+                            <MudNumericField T="int?"
+                                             @bind-Value="model.KidsBorn"
+                                             Label="Kids Born"
+                                             Variant="Variant.Outlined"
+                                             FullWidth />
+
+                        </MudItem>
+
+                        <!-- NOTES -->
+                        <MudItem xs="12">
+
+                            <MudTextField T="string"
+                                          @bind-Value="model.Notes"
+                                          Label="Notes"
+                                          Variant="Variant.Outlined"
+                                          Lines="4"
+                                          FullWidth />
+
+                        </MudItem>
+
+                    </MudGrid>
+
+                </MudForm>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- RIGHT PANEL -->
+        <MudItem xs="12" md="4">
+
+            <!-- SUMMARY -->
+            <MudPaper Class="pa-5 summary-card mb-4" Elevation="0">
+
+                <MudText Typo="Typo.h6" Class="fw-semibold mb-3">
+                    Summary
+                </MudText>
+
+                <MudDivider Class="mb-3" />
+
+                <MudStack Spacing="2">
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudText Typo="Typo.body2">
+                            Male Goat
+                        </MudText>
+
+                        <MudText Typo="Typo.body1" Class="fw-semibold">
+                            @(selectedMale != null ? $"#{selectedMale.Id}" : "-")
+                        </MudText>
+
+                    </MudPaper>
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudText Typo="Typo.body2">
+                            Female Goat
+                        </MudText>
+
+                        <MudText Typo="Typo.body1" Class="fw-semibold">
+                            @(selectedFemale != null ? $"#{selectedFemale.Id}" : "-")
+                        </MudText>
+
+                    </MudPaper>
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudText Typo="Typo.body2">
+                            Kids Born
+                        </MudText>
+
+                        <MudChip T="int?" Color="Color.Success" Variant="Variant.Text">
+                            @(model.KidsBorn ?? 0)
+                        </MudChip>
+
+                    </MudPaper>
+
+                </MudStack>
+
+            </MudPaper>
+
+            <!-- ACTIONS -->
+            <MudPaper Class="pa-5 action-card" Elevation="0">
+
+                <MudButton FullWidth
+                           Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="Save"
+                           Disabled="@isSaving">
+
+                    @(isSaving ? "Saving..." : (Id.HasValue ? "Update Record" : "Save Record"))
+
+                </MudButton>
+
+                <MudButton FullWidth
+                           Class="mt-3"
+                           Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="@(()=>Nav.NavigateTo("/breeding"))">
+
+                    Back
+
+                </MudButton>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>
+
+<style>
+
+    .breeding-form-page {
+        background-color: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .form-card,
+    .summary-card,
+    .action-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #eef2f7;
+    }
+
+    .info-box {
+        background-color: #f8fafc;
+        border-radius: 16px;
+        border: 1px solid #eef2f7;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .fw-semibold {
+        font-weight: 600;
+    }
+
+</style>
+
+@code {
+
+    [Parameter] public int? Id { get; set; }
+
+    private MudForm form;
+    private bool isSaving;
+    private bool isLoading = true;
+
+    private Goat? selectedMale;
+    private Goat? selectedFemale;
+
+    private Breeding model = new()
+    {
+        BreedingDate = DateTime.Now,
+        ExpectedDeliveryDate = DateTime.Now.AddDays(150)
+    };
+
+    private async Task<IEnumerable<Goat>> SearchMales(string value, CancellationToken token)
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<PagedResult<Goat>>(
+                $"api/breeding/search?gender=male&query={value}&page=1&pageSize=20",
+                token);
+
+            return result?.Items ?? new List<Goat>();
+        }
+        catch
+        {
+            return new List<Goat>();
+        }
+    }
+
+    private async Task<IEnumerable<Goat>> SearchFemales(string value, CancellationToken token)
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<PagedResult<Goat>>(
+                $"api/breeding/search?gender=female&query={value}&page=1&pageSize=20",
+                token);
+
+            return result?.Items ?? new List<Goat>();
+        }
+        catch
+        {
+            return new List<Goat>();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            // EDIT MODE ONLY
+            if (Id.HasValue)
+            {
+                // Load breeding
+                model = await Http.GetFromJsonAsync<Breeding>($"api/breeding/{Id}") ?? new Breeding();
+
+                // Load selected male goat
+                if (model.MaleGoatId > 0)
+                {
+                    selectedMale = await Http.GetFromJsonAsync<Goat>($"api/goat/{model.MaleGoatId}");
+                }
+
+                // Load selected female goat
+                if (model.FemaleGoatId > 0)
+                {
+                    selectedFemale = await Http.GetFromJsonAsync<Goat>($"api/goat/{model.FemaleGoatId}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                $"Error loading breeding data: {ex.Message}",
+                Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        await form.Validate();
+
+        if (!form.IsValid)
+        {
+            Snackbar.Add("Please fix validation errors", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+
+            model.MaleGoatId = selectedMale?.Id ?? 0;
+            model.FemaleGoatId = selectedFemale?.Id ?? 0;
+
+            // 🚨 VALIDATION CHECK
+            if (model.MaleGoatId == 0 || model.FemaleGoatId == 0)
+            {
+                Snackbar.Add("Please select both male and female goats", Severity.Warning);
+                return;
+            }
+
+            if (model.MaleGoatId == model.FemaleGoatId)
+            {
+                Snackbar.Add("Male and Female goat cannot be same", Severity.Error);
+                return;
+            }
+
+            HttpResponseMessage response;
+
+            if (Id.HasValue)
+                response = await Http.PutAsJsonAsync($"api/breeding/{Id}", model);
+            else
+                response = await Http.PostAsJsonAsync("api/breeding", model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Saved successfully", Severity.Success);
+                Nav.NavigateTo("/breeding");
+            }
+            else
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error: {msg}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Unexpected error: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private Task OnMaleChanged(Goat? goat)
+    {
+        selectedMale = goat;
+
+        model.MaleGoatId = goat?.Id ?? 0;
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnFemaleChanged(Goat? goat)
+    {
+        selectedFemale = goat;
+
+        model.FemaleGoatId = goat?.Id ?? 0;
+
+        return Task.CompletedTask;
+    }
+
+}

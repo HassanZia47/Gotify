@@ -1,0 +1,393 @@
+﻿@page "/bill/add"
+@page "/bill/edit/{Id:int}"
+@rendermode InteractiveServer
+
+@using Goatify.Core.Models
+@using System.Net.Http.Json
+@using MudBlazor
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-6 bill-form-page">
+
+    <!-- HEADER -->
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-6 flex-wrap">
+
+        <div>
+
+            <MudText Typo="Typo.h4" Class="fw-bold">
+
+                @(Id.HasValue ? "Edit Bill" : "Create New Bill")
+
+            </MudText>
+
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
+
+                @(Id.HasValue
+                    ? "Update bill information and payment details"
+                    : "Add a new bill and payment record")
+
+            </MudText>
+
+        </div>
+
+        <MudChip T="string" Color="@(Id.HasValue ? Color.Info : Color.Success)"
+                 Variant="Variant.Text"
+                 Size="Size.Medium">
+
+            @(Id.HasValue ? "Editing Mode" : "New Entry")
+
+        </MudChip>
+
+    </MudStack>
+
+    <MudGrid Spacing="4">
+
+        <!-- MAIN FORM -->
+
+        <MudItem xs="12" md="8">
+
+            <MudPaper Class="pa-6 form-card" Elevation="0">
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Spacing="2"
+                          Class="mb-5">
+
+                    <MudAvatar Color="Color.Primary"
+                               Variant="Variant.Filled">
+
+                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
+
+                    </MudAvatar>
+
+                    <div>
+
+                        <MudText Typo="Typo.h6" Class="fw-semibold">
+                            Bill Information
+                        </MudText>
+
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary">
+
+                            Enter all required bill details
+
+                        </MudText>
+
+                    </div>
+
+                </MudStack>
+
+                <MudDivider Class="mb-5" />
+
+                <MudForm @ref="form">
+
+                    <MudGrid Spacing="3">
+
+                        <!-- BILL NAME -->
+
+                        <MudItem xs="12">
+
+                            <MudTextField T="string"
+                                          @bind-Value="bill.Name"
+                                          Label="Bill Name"
+                                          Placeholder="Enter bill title"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="Bill name is required"
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Description"
+                                          FullWidth />
+
+                        </MudItem>
+
+                        <!-- AMOUNT -->
+
+                        <MudItem xs="12" md="6">
+
+                            <MudNumericField T="decimal"
+                                             @bind-Value="bill.Amount"
+                                             Label="Amount"
+                                             Placeholder="0"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             RequiredError="Amount is required"
+                                             Validation="@( (decimal v) => v <= 0 ? "Amount must be greater than 0" : null )"
+                                             Adornment="Adornment.Start"
+                                             AdornmentText="Rs."
+                                             FullWidth />
+
+                        </MudItem>
+
+                        <!-- DATE -->
+
+                        <MudItem xs="12" md="6">
+
+                            <MudDatePicker @bind-Date="bill.BillDate"
+                                           Label="Bill Date"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           RequiredError="Bill date is required"
+                                           Editable="true"
+                                           FullWidth />
+
+                        </MudItem>
+
+                        <!-- NOTES -->
+
+                        <MudItem xs="12">
+
+                            <MudTextField T="string"
+                                          @bind-Value="bill.Notes"
+                                          Label="Notes"
+                                          Placeholder="Add additional details..."
+                                          Variant="Variant.Outlined"
+                                          Lines="5"
+                                          Counter="300"
+                                          MaxLength="300"
+                                          FullWidth />
+
+                        </MudItem>
+
+                    </MudGrid>
+
+                </MudForm>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- SIDEBAR -->
+
+        <MudItem xs="12" md="4">
+
+            <!-- SUMMARY CARD -->
+
+            <MudPaper Class="pa-5 summary-card mb-4" Elevation="0">
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Spacing="2"
+                          Class="mb-4">
+
+                    <MudAvatar Color="Color.Success"
+                               Variant="Variant.Filled">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Payments" />
+
+                    </MudAvatar>
+
+                    <MudText Typo="Typo.h6" Class="fw-semibold">
+                        Bill Summary
+                    </MudText>
+
+                </MudStack>
+
+                <MudDivider Class="mb-4" />
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+
+                    Total Amount
+
+                </MudText>
+
+                <MudText Typo="Typo.h3"
+                         Color="Color.Primary"
+                         Class="fw-bold mt-1">
+
+                    Rs. @bill.Amount.ToString("N0")
+
+                </MudText>
+
+                <MudDivider Class="my-4" />
+
+                <MudStack Spacing="2">
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween">
+
+                            <MudText Typo="Typo.body2">
+                                Bill Date
+                            </MudText>
+
+                            <MudText Typo="Typo.body2"
+                                     Class="fw-semibold">
+
+                                @(bill.BillDate?.ToString("dd MMM yyyy") ?? "-")
+
+                            </MudText>
+
+                        </MudStack>
+
+                    </MudPaper>
+
+                    <MudPaper Class="pa-3 info-box" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween">
+
+                            <MudText Typo="Typo.body2">
+                                Status
+                            </MudText>
+
+                            <MudChip T="string" Color="Color.Success"
+                                     Variant="Variant.Text"
+                                     Size="Size.Small">
+
+                                Ready
+
+                            </MudChip>
+
+                        </MudStack>
+
+                    </MudPaper>
+
+                </MudStack>
+
+            </MudPaper>
+
+            <!-- ACTION CARD -->
+
+            <MudPaper Class="pa-5 action-card" Elevation="0">
+
+                <MudText Typo="Typo.subtitle1"
+                         Class="fw-semibold mb-4">
+
+                    Actions
+
+                </MudText>
+
+                <MudButton FullWidth
+                           Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="Save"
+                           Disabled="@isSaving"
+                           Class="rounded-pill">
+
+                    @(isSaving
+                        ? "Saving..."
+                        : Id.HasValue
+                            ? "Update Bill"
+                            : "Save Bill")
+
+                </MudButton>
+
+                <MudButton FullWidth
+                           Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Class="mt-3 rounded-pill"
+                           OnClick="@(()=> Nav.NavigateTo("/bill"))">
+
+                    Back to Bills
+
+                </MudButton>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>
+
+<style>
+
+    .bill-form-page {
+        background-color: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .form-card,
+    .summary-card,
+    .action-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #eef2f7;
+    }
+
+    .info-box {
+        background-color: #f8fafc;
+        border-radius: 16px;
+        border: 1px solid #eef2f7;
+    }
+
+    .rounded-pill {
+        border-radius: 999px !important;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .fw-semibold {
+        font-weight: 600;
+    }
+
+    .mud-input-control {
+        margin-bottom: 4px;
+    }
+
+</style>
+
+@code {
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    private MudForm form;
+
+    private bool isSaving = false;
+
+    private Bill bill = new()
+    {
+        BillDate = DateTime.Now
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            bill = await Http.GetFromJsonAsync<Bill>($"api/bill/{Id}")
+                   ?? new Bill();
+        }
+    }
+
+    private async Task Save()
+    {
+        await form.Validate();
+
+        if (!form.IsValid)
+            return;
+
+        isSaving = true;
+
+        try
+        {
+            HttpResponseMessage response;
+
+            if (Id.HasValue)
+                response = await Http.PutAsJsonAsync($"api/bill/{Id}", bill);
+            else
+                response = await Http.PostAsJsonAsync("api/bill", bill);
+
+            if (response.IsSuccessStatusCode)
+                Nav.NavigateTo("/bill");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

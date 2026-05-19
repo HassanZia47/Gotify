@@ -1,0 +1,6 @@
+@Goatify.API_HostAddress = http://localhost:5008
+
+GET {{Goatify.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
