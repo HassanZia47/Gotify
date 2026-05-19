@@ -48,10 +48,11 @@ jobs:
           base_path="/${GITHUB_REPOSITORY#*/}/"
           api_base_url="${{ vars.API_BASE_URL }}"
           if [ -z "$api_base_url" ]; then
-            echo "Set repository variable API_BASE_URL to your deployed API URL, for example https://api.example.com/"
+            echo "::error title=Missing API_BASE_URL::Set repository variable API_BASE_URL to your deployed API URL, for example https://api.example.com/"
             exit 1
           fi
           sed -i "s|<base href=\"/\" />|<base href=\"$base_path\" />|" release/wwwroot/index.html
+          touch release/wwwroot/.nojekyll
           cat > release/wwwroot/appsettings.json <<EOF
           {
             "ApiBaseUrl": "$api_base_url"

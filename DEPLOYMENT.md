@@ -12,7 +12,9 @@ This setup targets:
 2. Add a repository variable named `API_BASE_URL`, for example `https://api.example.com/`.
 3. Push to `main`. The workflow publishes `Goatify.UI/Goatify.UI.Client`.
 
-The workflow rewrites the Blazor `<base>` tag to the repository path and publishes the static `wwwroot` output.
+The workflow rewrites the Blazor `<base>` tag to the repository path, adds `.nojekyll` so GitHub Pages serves Blazor's `_framework` and `_content` folders, and publishes the static `wwwroot` output.
+
+If GitHub Pages shows "There isn't a GitHub Pages site here", check the latest `Deploy Blazor client to GitHub Pages` run in the repository Actions tab. The first successful run creates the site. A failed run commonly means Pages is not set to GitHub Actions or the `API_BASE_URL` repository variable is missing.
 
 ## API environment variables
 
