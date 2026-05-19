@@ -8,9 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Goatify.Core\Goatify.Core.csproj" />
-    <ProjectReference Include="..\Goatify.UI.Client\Goatify.UI.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.27" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.27" />
     <PackageReference Include="MudBlazor" Version="9.4.0" />
   </ItemGroup>
 

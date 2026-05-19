@@ -1,0 +1,68 @@
+name: Deploy Blazor client to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Goatify.UI/Goatify.UI.Client/**"
+      - "Goatify.Core/**"
+      - ".github/workflows/deploy-client.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Publish client
+        run: dotnet publish Goatify.UI/Goatify.UI.Client/Goatify.UI.Client.csproj -c Release -o release
+
+      - name: Configure static app
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_path="/${GITHUB_REPOSITORY#*/}/"
+          api_base_url="${{ vars.API_BASE_URL }}"
+          if [ -z "$api_base_url" ]; then
+            echo "Set repository variable API_BASE_URL to your deployed API URL, for example https://api.example.com/"
+            exit 1
+          fi
+          sed -i "s|<base href=\"/\" />|<base href=\"$base_path\" />|" release/wwwroot/index.html
+          cat > release/wwwroot/appsettings.json <<EOF
+          {
+            "ApiBaseUrl": "$api_base_url"
+          }
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: release/wwwroot
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,903 @@
+@page "/"
+@page "/dashboard"
+
+@using Goatify.Core.Models
+@using Goatify.Core.Enums
+@using System.Net.Http.Json
+@using MudBlazor
+@using Goatify.UI.Services
+
+@inject HttpClient Http
+@inject AppApiClient Api
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.False" Class="dashboard-page pa-4 pa-md-6">
+
+    <!-- TOP HEADER -->
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-6 flex-wrap dashboard-header">
+
+        <div>
+
+            <MudText Typo="Typo.h4" Class="fw-bold">
+                Goat Farm Dashboard
+            </MudText>
+
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                Complete farm overview, breeding tracking, finances and medicine monitoring
+            </MudText>
+
+        </div>
+
+        <MudStack Row="true" Spacing="2">
+
+            <MudChip T="string"
+                     Color="Color.Success"
+                     Variant="Variant.Filled"
+                     StartIcon="@Icons.Material.Filled.CalendarMonth">
+
+                @DateTime.Now.ToString("dd MMM yyyy")
+
+            </MudChip>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/goat/add"))">
+
+                Add Goat
+
+            </MudButton>
+
+        </MudStack>
+
+    </MudStack>
+
+    <MudGrid Spacing="2" Class="mb-4">
+
+        <MudItem xs="6" sm="4" md="2" lg="2">
+            <MudButton FullWidth
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Pets"
+                       OnClick="@(()=>Nav.NavigateTo("/goat"))">
+
+                Goats
+
+            </MudButton>
+        </MudItem>
+
+        <MudItem xs="6" sm="4" md="2" lg="2">
+            <MudButton FullWidth
+                       Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.ReceiptLong"
+                       OnClick="@(()=>Nav.NavigateTo("/bill"))">
+
+                Bills
+
+            </MudButton>
+        </MudItem>
+
+        <MudItem xs="6" sm="4" md="2" lg="2">
+            <MudButton FullWidth
+                       Variant="Variant.Filled"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.Payments"
+                       OnClick="@(()=>Nav.NavigateTo("/expenses"))">
+
+                Expenses
+
+            </MudButton>
+        </MudItem>
+
+        <MudItem xs="6" sm="4" md="2" lg="2">
+            <MudButton FullWidth
+                       Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Favorite"
+                       OnClick="@(()=>Nav.NavigateTo("/breeding"))">
+
+                Breeding
+
+            </MudButton>
+        </MudItem>
+
+        <MudItem xs="6" sm="4" md="2" lg="2">
+            <MudButton FullWidth
+                       Variant="Variant.Filled"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Medication"
+                       OnClick="@(()=>Nav.NavigateTo("/medications"))">
+
+                Medication
+
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- KPI CARDS -->
+    <MudGrid Spacing="3" Class="mb-2">
+
+        <!-- TOTAL GOATS -->
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="dashboard-card stat-card card-goat" Elevation="0">
+
+                <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+                    <div>
+
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Total Goats
+                        </MudText>
+
+                        <MudText Typo="Typo.h3" Class="fw-bold mt-1">
+                            @totalGoats
+                        </MudText>
+
+                    </div>
+
+                    <MudAvatar Size="Size.Large"
+                               Color="Color.Primary"
+                               Variant="Variant.Filled">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Pets" />
+
+                    </MudAvatar>
+
+                </MudStack>
+
+                <MudDivider Class="my-4" />
+
+                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Size="Size.Small">
+
+                        Owned: @ownedGoats
+
+                    </MudChip>
+
+                    <MudChip T="string"
+                             Color="Color.Info"
+                             Size="Size.Small">
+
+                        Sold: @soldGoats
+
+                    </MudChip>
+
+                    <MudChip T="string"
+                             Color="Color.Error"
+                             Size="Size.Small">
+
+                        Dead: @deadGoats
+
+                    </MudChip>
+
+                </MudStack>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- MONTHLY EXPENSE -->
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="dashboard-card stat-card card-expense" Elevation="0">
+
+                <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+                    <div>
+
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Monthly Expenses
+                        </MudText>
+
+                        <MudText Typo="Typo.h4" Class="fw-bold mt-1">
+                            Rs. @monthlyExpenses.ToString("N0")
+                        </MudText>
+
+                    </div>
+
+                    <MudAvatar Size="Size.Large"
+                               Color="Color.Error"
+                               Variant="Variant.Filled">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Payments" />
+
+                    </MudAvatar>
+
+                </MudStack>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.caption">
+                    Annual Expenses:
+                    <b>Rs. @annualExpenses.ToString("N0")</b>
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- MONTHLY BILLS -->
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="dashboard-card stat-card card-bill" Elevation="0">
+
+                <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+                    <div>
+
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Monthly Bills
+                        </MudText>
+
+                        <MudText Typo="Typo.h4" Class="fw-bold mt-1">
+                            Rs. @monthlyBills.ToString("N0")
+                        </MudText>
+
+                    </div>
+
+                    <MudAvatar Size="Size.Large"
+                               Color="Color.Warning"
+                               Variant="Variant.Filled">
+
+                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
+
+                    </MudAvatar>
+
+                </MudStack>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.caption">
+                    Annual Bills:
+                    <b>Rs. @annualBills.ToString("N0")</b>
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- MEDICINES -->
+        <MudItem xs="12" sm="6" md="3">
+
+            <MudPaper Class="dashboard-card stat-card card-medicine" Elevation="0">
+
+                <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+                    <div>
+
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Medicines This Month
+                        </MudText>
+
+                        <MudText Typo="Typo.h3" Class="fw-bold mt-1">
+                            @monthlyMedicines
+                        </MudText>
+
+                    </div>
+
+                    <MudAvatar Size="Size.Large"
+                               Color="Color.Success"
+                               Variant="Variant.Filled">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Medication" />
+
+                    </MudAvatar>
+
+                </MudStack>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.caption">
+                    Medication assignments this month
+                </MudText>
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- SECOND ROW -->
+    <MudGrid Spacing="3" Class="mt-2">
+
+        <!-- EXPECTED DELIVERIES -->
+        <MudItem xs="12" lg="7">
+
+            <MudPaper Class="dashboard-card large-card" Elevation="0">
+
+                <MudStack Row="true"
+                          Justify="Justify.SpaceBetween"
+                          AlignItems="AlignItems.Center"
+                          Class="mb-4">
+
+                    <div>
+
+                        <MudText Typo="Typo.h6" Class="fw-bold">
+                            Upcoming Deliveries
+                        </MudText>
+
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Pregnant goats expected to deliver soon
+                        </MudText>
+
+                    </div>
+
+                    <MudChip T="int"
+                             Color="Color.Secondary"
+                             Variant="Variant.Text">
+
+                        @upcomingBreedings.Count Records
+
+                    </MudChip>
+
+                </MudStack>
+
+                <MudTable T="Goatify.Core.Models.Breeding"
+                          Items="upcomingBreedings"
+                          Hover="true"
+                          Dense="true"
+                          Striped="true"
+                          Bordered="false"
+                          Breakpoint="Breakpoint.Sm">
+
+                    <HeaderContent>
+
+                        <MudTh>Female Goat</MudTh>
+                        <MudTh>Male Goat</MudTh>
+                        <MudTh>Expected Delivery</MudTh>
+                        <MudTh>Days Left</MudTh>
+
+                    </HeaderContent>
+
+                    <RowTemplate>
+
+                        <MudTd>
+
+                            <MudChip T="int"
+                                     Size="Size.Small"
+                                     Color="Color.Secondary">
+
+                                #@context.FemaleGoatId
+
+                            </MudChip>
+
+                        </MudTd>
+
+                        <MudTd>
+
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Color="Color.Info">
+
+                                #@context.MaleGoatId
+
+                            </MudChip>
+
+                        </MudTd>
+
+                        <MudTd>
+                            @context.ExpectedDeliveryDate?.ToString("dd MMM yyyy")
+                        </MudTd>
+
+                        <MudTd>
+
+                            @{
+                                var days =
+                                context.ExpectedDeliveryDate.HasValue
+                                ? (context.ExpectedDeliveryDate.Value.Date - DateTime.Now.Date).Days
+                                : 0;
+                            }
+
+                            <MudChip T="string"
+                                     Color="@(days <= 7 ? Color.Error : Color.Warning)"
+                                     Variant="Variant.Text">
+
+                                @days Days
+
+                            </MudChip>
+
+                        </MudTd>
+
+                    </RowTemplate>
+
+                </MudTable>
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- QUICK STATS -->
+        <MudItem xs="12" lg="5">
+
+            <MudGrid Spacing="3">
+
+                <!-- BREEDING -->
+                <MudItem xs="12">
+
+                    <MudPaper Class="dashboard-card mini-card" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center">
+
+                            <div>
+
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Active Pregnancies
+                                </MudText>
+
+                                <MudText Typo="Typo.h4" Class="fw-bold">
+                                    @activePregnancies
+                                </MudText>
+
+                            </div>
+
+                            <MudAvatar Color="Color.Secondary"
+                                       Variant="Variant.Filled">
+
+                                <MudIcon Icon="@Icons.Material.Filled.Favorite" />
+
+                            </MudAvatar>
+
+                        </MudStack>
+
+                    </MudPaper>
+
+                </MudItem>
+
+                <!-- PROFIT -->
+                <MudItem xs="12">
+
+                    <MudPaper Class="dashboard-card mini-card" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center">
+
+                            <div>
+
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Goat Sales Revenue
+                                </MudText>
+
+                                <MudText Typo="Typo.h4"
+                                         Color="Color.Success"
+                                         Class="fw-bold">
+
+                                    Rs. @totalSales.ToString("N0")
+
+                                </MudText>
+
+                            </div>
+
+                            <MudAvatar Color="Color.Success"
+                                       Variant="Variant.Filled">
+
+                                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" />
+
+                            </MudAvatar>
+
+                        </MudStack>
+
+                    </MudPaper>
+
+                </MudItem>
+
+                <!-- AVERAGE PURCHASE -->
+                <MudItem xs="12">
+
+                    <MudPaper Class="dashboard-card mini-card" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center">
+
+                            <div>
+
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Avg Goat Purchase
+                                </MudText>
+
+                                <MudText Typo="Typo.h4" Class="fw-bold">
+                                    Rs. @averagePurchase.ToString("N0")
+                                </MudText>
+
+                            </div>
+
+                            <MudAvatar Color="Color.Primary"
+                                       Variant="Variant.Filled">
+
+                                <MudIcon Icon="@Icons.Material.Filled.Analytics" />
+
+                            </MudAvatar>
+
+                        </MudStack>
+
+                    </MudPaper>
+
+                </MudItem>
+
+            </MudGrid>
+
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- THIRD ROW -->
+    <MudGrid Spacing="3" Class="mt-2">
+
+        <!-- RECENT EXPENSES -->
+        <MudItem xs="12" lg="6">
+
+            <MudPaper Class="dashboard-card large-card" Elevation="0">
+
+                <MudStack Row="true"
+                          Justify="Justify.SpaceBetween"
+                          AlignItems="AlignItems.Center"
+                          Class="mb-4">
+
+                    <MudText Typo="Typo.h6" Class="fw-bold">
+                        Recent Expenses
+                    </MudText>
+
+                    <MudButton Variant="Variant.Text"
+                               EndIcon="@Icons.Material.Filled.ArrowForward"
+                               OnClick="@(()=>Nav.NavigateTo("/expenses"))">
+
+                        View All
+
+                    </MudButton>
+
+                </MudStack>
+
+                @foreach (var expense in recentExpenses)
+                {
+                    <MudPaper Class="expense-row pa-3 mb-2" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center">
+
+                            <div>
+
+                                <MudText Typo="Typo.body1" Class="fw-semibold">
+                                    @expense.Name
+                                </MudText>
+
+                                <MudText Typo="Typo.caption"
+                                         Color="Color.Secondary">
+
+                                    @expense.Date?.ToString("dd MMM yyyy")
+
+                                </MudText>
+
+                            </div>
+
+                            <MudChip T="string"
+                                     Color="Color.Error"
+                                     Variant="Variant.Text">
+
+                                Rs. @expense.TotalPrice.ToString("N0")
+
+                            </MudChip>
+
+                        </MudStack>
+
+                    </MudPaper>
+                }
+
+            </MudPaper>
+
+        </MudItem>
+
+        <!-- RECENT BILLS -->
+        <MudItem xs="12" lg="6">
+
+            <MudPaper Class="dashboard-card large-card" Elevation="0">
+
+                <MudStack Row="true"
+                          Justify="Justify.SpaceBetween"
+                          AlignItems="AlignItems.Center"
+                          Class="mb-4">
+
+                    <MudText Typo="Typo.h6" Class="fw-bold">
+                        Recent Bills
+                    </MudText>
+
+                    <MudButton Variant="Variant.Text"
+                               EndIcon="@Icons.Material.Filled.ArrowForward"
+                               OnClick="@(()=>Nav.NavigateTo("/bills"))">
+
+                        View All
+
+                    </MudButton>
+
+                </MudStack>
+
+                @foreach (var bill in recentBills)
+                {
+                    <MudPaper Class="expense-row pa-3 mb-2" Elevation="0">
+
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center">
+
+                            <div>
+
+                                <MudText Typo="Typo.body1" Class="fw-semibold">
+                                    @bill.Name
+                                </MudText>
+
+                                <MudText Typo="Typo.caption"
+                                         Color="Color.Secondary">
+
+                                    @bill.BillDate?.ToString("dd MMM yyyy")
+
+                                </MudText>
+
+                            </div>
+
+                            <MudChip T="string"
+                                     Color="Color.Warning"
+                                     Variant="Variant.Text">
+
+                                Rs. @bill.Amount.ToString("N0")
+
+                            </MudChip>
+
+                        </MudStack>
+
+                    </MudPaper>
+                }
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>
+
+<style>
+
+    .dashboard-page {
+        background: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .dashboard-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #eef2f7;
+        transition: all 0.25s ease;
+    }
+
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+        }
+
+    .stat-card {
+        padding: 24px;
+        min-height: 210px;
+    }
+
+    .large-card {
+        padding: 24px;
+    }
+
+    .mini-card {
+        padding: 22px;
+    }
+
+    .expense-row {
+        border-radius: 18px;
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .fw-semibold {
+        font-weight: 600;
+    }
+
+    .card-goat {
+        border-top: 5px solid #6366f1;
+    }
+
+    .card-expense {
+        border-top: 5px solid #ef4444;
+    }
+
+    .card-bill {
+        border-top: 5px solid #f59e0b;
+    }
+
+    .card-medicine {
+        border-top: 5px solid #10b981;
+    }
+
+    .mud-table {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    @@media(max-width:768px) {
+
+        .dashboard-header {
+            gap: 16px;
+        }
+
+        .stat-card {
+            min-height: auto;
+        }
+    }
+
+</style>
+
+@code {
+
+    private List<Goatify.Core.Models.Goat> goats = new();
+    private List<Expense> expenses = new();
+    private List<Goatify.Core.Models.Bill> bills = new();
+    private List<Goatify.Core.Models.Breeding> breedings = new();
+    private List<GoatMedication> goatMedications = new();
+
+    private List<Expense> recentExpenses = new();
+    private List<Goatify.Core.Models.Bill> recentBills = new();
+    private List<Goatify.Core.Models.Breeding> upcomingBreedings = new();
+
+    // GOATS
+    private int totalGoats;
+    private int ownedGoats;
+    private int soldGoats;
+    private int deadGoats;
+
+    // FINANCIAL
+    private decimal monthlyExpenses;
+    private decimal annualExpenses;
+    private decimal monthlyBills;
+    private decimal annualBills;
+    private decimal totalSales;
+    private decimal averagePurchase;
+
+    // OTHER
+    private int monthlyMedicines;
+    private int activePregnancies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+    }
+
+    private async Task LoadDashboard()
+    {
+        var goatResult = await Api.GetAsync<List<Goatify.Core.Models.Goat>>("api/goat");
+        var expenseResult = await Api.GetAsync<List<Expense>>("api/expense");
+        var billResult = await Api.GetAsync<List<Goatify.Core.Models.Bill>>("api/bill");
+        var breedingResult = await Api.GetAsync<List<Goatify.Core.Models.Breeding>>("api/breeding");
+        var medicationResult = await Api.GetAsync<List<GoatMedication>>("api/medication/GetAllGoatMedication");
+
+        var failedResult = new[]
+        {
+            goatResult.ErrorMessage,
+            expenseResult.ErrorMessage,
+            billResult.ErrorMessage,
+            breedingResult.ErrorMessage,
+            medicationResult.ErrorMessage
+        }.FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
+
+        if (!string.IsNullOrWhiteSpace(failedResult))
+        {
+            Snackbar.Add($"Dashboard load failed: {failedResult}", Severity.Error);
+        }
+
+        goats = goatResult.Value ?? new();
+        expenses = expenseResult.Value ?? new();
+        bills = billResult.Value ?? new();
+        breedings = breedingResult.Value ?? new();
+        goatMedications = medicationResult.Value ?? new();
+
+        CalculateDashboard();
+    }
+
+    private void CalculateDashboard()
+    {
+        var now = DateTime.Now;
+
+        // GOATS
+        totalGoats = goats.Count;
+
+        ownedGoats =
+            goats.Count(x => x.Status == GoatStatus.Owned);
+
+        soldGoats =
+            goats.Count(x => x.Status == GoatStatus.Sold);
+
+        deadGoats =
+            goats.Count(x => x.Status == GoatStatus.Dead);
+
+        // EXPENSES
+        monthlyExpenses =
+            expenses
+            .Where(x =>
+                x.Date?.Month == now.Month &&
+                x.Date?.Year == now.Year)
+            .Sum(x => x.TotalPrice);
+
+        annualExpenses =
+            expenses
+            .Where(x => x.Date?.Year == now.Year)
+            .Sum(x => x.TotalPrice);
+
+        // BILLS
+        monthlyBills =
+            bills
+            .Where(x =>
+                x.BillDate?.Month == now.Month &&
+                x.BillDate?.Year == now.Year)
+            .Sum(x => x.Amount);
+
+        annualBills =
+            bills
+            .Where(x => x.BillDate?.Year == now.Year)
+            .Sum(x => x.Amount);
+
+        // SALES
+        totalSales =
+            goats
+            .Where(x => x.SalePrice.HasValue)
+            .Sum(x => x.SalePrice ?? 0);
+
+        averagePurchase =
+            goats.Any()
+            ? goats.Average(x => x.PurchasePrice)
+            : 0;
+
+        // MEDICINES
+        monthlyMedicines =
+            goatMedications
+            .Count(x =>
+                x.AssignedDate.Month == now.Month &&
+                x.AssignedDate.Year == now.Year);
+
+        // BREEDINGS
+        upcomingBreedings =
+            breedings
+            .Where(x =>
+                x.ExpectedDeliveryDate >= DateTime.Now &&
+                x.ActualDeliveryDate == null)
+            .OrderBy(x => x.ExpectedDeliveryDate)
+            .Take(10)
+            .ToList();
+
+        activePregnancies = upcomingBreedings.Count;
+
+        // RECENT
+        recentExpenses =
+            expenses
+            .OrderByDescending(x => x.Date)
+            .Take(5)
+            .ToList();
+
+        recentBills =
+            bills
+            .OrderByDescending(x => x.BillDate)
+            .Take(5)
+            .ToList();
+    }
+
+}

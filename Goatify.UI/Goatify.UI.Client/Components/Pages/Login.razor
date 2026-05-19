@@ -1,0 +1,62 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@using MudBlazor
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-10">
+
+    <MudPaper Class="pa-6">
+
+        <MudText Typo="Typo.h4">Login</MudText>
+
+        <MudTextField @bind-Value="username"
+                      Label="Username"
+                      Variant="Variant.Outlined"
+                      Class="mt-4" />
+
+        <MudTextField @bind-Value="password"
+                      Label="Password"
+                      InputType="InputType.Password"
+                      Variant="Variant.Outlined"
+                      Class="mt-4" />
+
+        <MudButton Class="mt-6"
+                   FullWidth
+                   Color="Color.Primary"
+                   Disabled="loading"
+                   OnClick="LoginUser">
+
+            @(loading ? "Signing in..." : "Login")
+
+        </MudButton>
+
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private bool loading;
+
+    private async Task LoginUser()
+    {
+        loading = true;
+
+        var ok = await Auth.Login(username, password);
+
+        if (ok)
+        {
+            Snackbar.Add("Login successful", Severity.Success);
+            Nav.NavigateTo("/", true);
+        }
+        else
+        {
+            Snackbar.Add(Auth.LastError, Severity.Error);
+        }
+
+        loading = false;
+    }
+}

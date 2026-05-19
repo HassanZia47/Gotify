@@ -1,4 +1,3 @@
-using Goatify.UI.Client.Pages;
 using Goatify.UI;
 using Goatify.UI.Components;
 using Goatify.UI.Services;
@@ -10,8 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+    .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
 builder.Services.AddAuthorizationCore();
@@ -38,7 +36,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseWebAssemblyDebugging();
 }
 else
 {
@@ -53,8 +50,6 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
-    .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(Goatify.UI.Client._Imports).Assembly);
+    .AddInteractiveServerRenderMode();
 
 app.Run();

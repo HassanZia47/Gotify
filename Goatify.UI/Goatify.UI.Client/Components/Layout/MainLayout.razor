@@ -1,0 +1,111 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Web
+
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="0" Dense="true" Class="app-shell-bar">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="app-brand">
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                <MudIcon Icon="@Icons.Material.Filled.Pets" />
+            </MudAvatar>
+            <MudText Typo="Typo.h6">Goat Farm</MudText>
+        </MudStack>
+        <MudSpacer />
+        <MudButton Href="/dashboard"
+                   Color="Color.Inherit"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.Dashboard">
+            Dashboard
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+        <MudButton Href="/logout"
+                   Color="Color.Error"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.Logout">
+            Logout
+        </MudButton>
+    </MudAppBar>
+
+    <MudMainContent Class="app-main">
+        <ErrorBoundary @ref="_errorBoundary">
+            <ChildContent>
+                @Body
+            </ChildContent>
+            <ErrorContent>
+                <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-6">
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="app-error">
+                        <MudText Typo="Typo.h6">Something went wrong</MudText>
+                        <MudText Typo="Typo.body2">
+                            The page could not finish loading. Please retry, or return to the dashboard.
+                        </MudText>
+                        <MudStack Row="true" Spacing="2" Class="mt-4">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Inherit"
+                                       OnClick="Recover">
+                                Retry
+                            </MudButton>
+                            <MudButton Href="/dashboard"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Inherit">
+                                Dashboard
+                            </MudButton>
+                        </MudStack>
+                    </MudAlert>
+                </MudContainer>
+            </ErrorContent>
+        </ErrorBoundary>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private ErrorBoundary? _errorBoundary;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#2563eb",
+            Secondary = "#0f766e",
+            Tertiary = "#7c3aed",
+            Success = "#16a34a",
+            Warning = "#d97706",
+            Error = "#dc2626",
+            Background = "#f6f8fb",
+            Surface = "#ffffff",
+            AppbarBackground = "#ffffff",
+            AppbarText = "#172033",
+            DrawerBackground = "#ffffff",
+            TextPrimary = "#172033",
+            TextSecondary = "#64748b",
+            Divider = "#e5e7eb"
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "10px"
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography
+            {
+                FontFamily = new[] { "Inter", "Segoe UI", "Arial", "sans-serif" },
+                FontSize = ".95rem",
+                LineHeight = "1.45"
+            }
+        }
+    };
+
+    protected override void OnParametersSet()
+    {
+        _errorBoundary?.Recover();
+    }
+
+    private void Recover()
+    {
+        _errorBoundary?.Recover();
+    }
+}
