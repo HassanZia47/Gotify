@@ -1,15 +1,26 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 using Goatify.Core.Models;
+using Goatify.Core.Services;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Goatify.Infrastructure.Data
 {
     public class GoatifyDbContext : IdentityDbContext<AppUser>
     {
+        private readonly ICurrentUserService? _currentUserService;
+
         public GoatifyDbContext(
-        DbContextOptions<GoatifyDbContext> options)
-        : base(options)
+            DbContextOptions<GoatifyDbContext> options)
+            : this(options, null)
         {
+        }
+
+        public GoatifyDbContext(
+            DbContextOptions<GoatifyDbContext> options,
+            ICurrentUserService? currentUserService)
+            : base(options)
+        {
+            _currentUserService = currentUserService;
         }
 
         public DbSet<Expense> Expenses { get; set; }
@@ -19,12 +30,10 @@ namespace Goatify.Infrastructure.Data
         public DbSet<GoatMedication> GoatMedications { get; set; }
         public DbSet<Breeding> Breedings { get; set; }
 
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Fix decimal precision warnings
             modelBuilder.Entity<Expense>()
                 .Property(e => e.Quantity)
                 .HasPrecision(18, 2);
@@ -39,7 +48,6 @@ namespace Goatify.Infrastructure.Data
 
             modelBuilder.Entity<Expense>()
                 .HasQueryFilter(x => !x.DeletedFlag);
-
 
             modelBuilder.Entity<Goat>()
                 .HasQueryFilter(x => !x.DeletedFlag);
@@ -68,30 +76,53 @@ namespace Goatify.Infrastructure.Data
 
             modelBuilder.Entity<Breeding>()
                 .HasQueryFilter(x => !x.DeletedFlag);
-
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker.Entries<BaseAuditEntity>();
             var now = DateTime.UtcNow;
+            var userName = _currentUserService?.UserName ?? "system";
 
             foreach (var entry in entries)
             {
                 switch (entry.State)
                 {
                     case EntityState.Added:
+                        entry.Entity.CreatedBy = userName;
                         entry.Entity.CreatedDateTime = now;
                         break;
 
                     case EntityState.Modified:
+                        entry.Property(x => x.CreatedBy).IsModified = false;
+                        entry.Property(x => x.CreatedDateTime).IsModified = false;
+
+                        var deletedFlagChanged = entry.Property(x => x.DeletedFlag).IsModified;
+
+                        if (deletedFlagChanged && entry.Entity.DeletedFlag)
+                        {
+                            entry.Entity.DeletedBy = userName;
+                            entry.Entity.DeletedDateTime = now;
+                        }
+                        else if (deletedFlagChanged && !entry.Entity.DeletedFlag)
+                        {
+                            entry.Entity.DeletedBy = null;
+                            entry.Entity.DeletedDateTime = null;
+                        }
+
+                        entry.Entity.ModifiedBy = userName;
                         entry.Entity.ModifiedDateTime = now;
                         break;
 
                     case EntityState.Deleted:
                         entry.State = EntityState.Modified;
+                        entry.Property(x => x.CreatedBy).IsModified = false;
+                        entry.Property(x => x.CreatedDateTime).IsModified = false;
                         entry.Entity.DeletedFlag = true;
+                        entry.Entity.DeletedBy = userName;
                         entry.Entity.DeletedDateTime = now;
+                        entry.Entity.ModifiedBy = userName;
+                        entry.Entity.ModifiedDateTime = now;
                         break;
                 }
             }
@@ -99,5 +130,4 @@ namespace Goatify.Infrastructure.Data
             return await base.SaveChangesAsync(cancellationToken);
         }
     }
-
 }

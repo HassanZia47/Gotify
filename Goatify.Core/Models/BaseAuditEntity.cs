@@ -7,5 +7,6 @@ public abstract class BaseAuditEntity
     public string? ModifiedBy { get; set; }
     public DateTime? ModifiedDateTime { get; set; }
     public bool DeletedFlag { get; set; }
+    public string? DeletedBy { get; set; }
     public DateTime? DeletedDateTime { get; set; }
 }

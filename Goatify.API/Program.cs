@@ -1,5 +1,7 @@
 ﻿using Goatify.Infrastructure;
 using Goatify.Infrastructure.Data;
+using Goatify.API.Services;
+using Goatify.Core.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
@@ -35,6 +37,8 @@ builder.Services.AddIdentity<AppUser, IdentityRole>()
 
 // JWT Service Registration ✅ ADD THIS
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
