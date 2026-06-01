@@ -75,41 +75,44 @@
 
                     <MudDivider Class="my-5" />
 
-                    <!-- GOAT LINKING -->
-                    <MudText Typo="Typo.h6" Class="mb-3">
-                        Link Goats
-                    </MudText>
+                    @if (Id.HasValue)
+                    {
+                        <!-- GOAT LINKING -->
+                        <MudText Typo="Typo.h6" Class="mb-3">
+                            Link Goats
+                        </MudText>
 
-                    <MudAutocomplete T="Goat"
-                                     Label="Search Goat"
-                                     Value="selectedGoat"
-                                     ValueChanged="g => selectedGoat = g"
-                                     SearchFunc="SearchGoats"
-                                     ToStringFunc="@(g => g == null ? "" : $"#{g.Id} - {g.PurchasePrice} - {g.PurchaseDate?.ToString("dd MMM yyyy")} - {g.Notes}")"
-                                     Clearable="true"
-                                     Variant="Variant.Outlined"
-                                     FullWidth=true
-                                     Adornment="Adornment.Start"
-                                     AdornmentIcon="@Icons.Material.Filled.Search"
-                                     OnBlur="AddGoat"
-                                     Class="mb-3" />
+                        <MudAutocomplete T="Goat"
+                                         Label="Search Goat"
+                                         Value="selectedGoat"
+                                         ValueChanged="g => selectedGoat = g"
+                                         SearchFunc="SearchGoats"
+                                         ToStringFunc="@(g => g == null ? "" : $"#{g.Id} - {g.PurchasePrice} - {g.PurchaseDate?.ToString("dd MMM yyyy")} - {g.Notes}")"
+                                         Clearable="true"
+                                         Variant="Variant.Outlined"
+                                         FullWidth=true
+                                         Adornment="Adornment.Start"
+                                         AdornmentIcon="@Icons.Material.Filled.Search"
+                                         OnBlur="AddGoat"
+                                         Class="mb-3" />
 
-                    <!-- SELECTED GOATS -->
-                    <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                        <!-- SELECTED GOATS -->
+                        <MudStack Row="true" Spacing="1" Class="flex-wrap">
 
-                        @foreach (var goat in selectedGoats)
-                        {
-                            <MudChip T="int" Color="Color.Primary"
-                                     Variant="Variant.Text"
-                                     Closeable="true"
-                                     OnClose="@(() => RemoveGoat(goat.Id))">
+                            @foreach (var goat in selectedGoats)
+                            {
+                                <MudChip T="int" Color="Color.Primary"
+                                         Variant="Variant.Text"
+                                         Closeable="true"
+                                         OnClose="@(() => RemoveGoat(goat.Id))">
 
-                                #@goat.Id
+                                    #@goat.Id
 
-                            </MudChip>
-                        }
+                                </MudChip>
+                            }
 
-                    </MudStack>
+                        </MudStack>
+                    }
 
                 </MudForm>
 
@@ -173,83 +176,86 @@
 
     </MudGrid>
 
-    <!-- LINKED GOATS TABLE -->
-    <MudPaper Class="pa-5 mt-6 table-card" Elevation="0">
+    @if (Id.HasValue)
+    {
+        <!-- LINKED GOATS TABLE -->
+        <MudPaper Class="pa-5 mt-6 table-card" Elevation="0">
 
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
 
-            <MudText Typo="Typo.h6">Linked Goats</MudText>
+                <MudText Typo="Typo.h6">Linked Goats</MudText>
 
-            <MudChip T="int" Color="Color.Primary" Variant="Variant.Text">
-                @linkedTotal Total
-            </MudChip>
+                <MudChip T="int" Color="Color.Primary" Variant="Variant.Text">
+                    @linkedTotal Total
+                </MudChip>
 
-        </MudStack>
+            </MudStack>
 
-        <MudTextField T="string"
-                      @bind-Value="linkedSearch"
-                      Placeholder="Search linked goats..."
-                      Variant="Variant.Outlined"
-                      Immediate="true"
-                      DebounceInterval="400"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      FullWidth=true
-                      OnDebounceIntervalElapsed="ReloadLinkedGoats"
-                      Class="mb-4" />
+            <MudTextField T="string"
+                          @bind-Value="linkedSearch"
+                          Placeholder="Search linked goats..."
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          DebounceInterval="400"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          FullWidth=true
+                          OnDebounceIntervalElapsed="ReloadLinkedGoats"
+                          Class="mb-4" />
 
-        <MudTable T="Goat"
-                  ServerData="LoadLinkedGoats"
-                  @ref="linkedTable"
-                  Hover="true"
-                  Dense="true"
-                  RowsPerPage="@linkedPageSize"
-                  RowsPerPageChanged="OnLinkedPageSizeChanged">
+            <MudTable T="Goat"
+                      ServerData="LoadLinkedGoats"
+                      @ref="linkedTable"
+                      Hover="true"
+                      Dense="true"
+                      RowsPerPage="@linkedPageSize"
+                      RowsPerPageChanged="OnLinkedPageSizeChanged">
 
-            <HeaderContent>
+                <HeaderContent>
 
-                <MudTh>ID</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh>Price</MudTh>
-                <MudTh>Gender</MudTh>
-                <MudTh>Notes</MudTh>
-                <MudTh Align="Align.Right">Actions</MudTh>
+                    <MudTh>ID</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh>Gender</MudTh>
+                    <MudTh>Notes</MudTh>
+                    <MudTh Align="Align.Right">Actions</MudTh>
 
-            </HeaderContent>
+                </HeaderContent>
 
-            <RowTemplate>
+                <RowTemplate>
 
-                <MudTd>#@context.Id</MudTd>
+                    <MudTd>#@context.Id</MudTd>
 
-                <MudTd>
-                    <MudChip T="string" Color="@(context.Status.ToString() == "Owned" ? Color.Success : Color.Error)"
-                             Variant="Variant.Text">
-                        @context.Status
-                    </MudChip>
-                </MudTd>
+                    <MudTd>
+                        <MudChip T="string" Color="@(context.Status.ToString() == "Owned" ? Color.Success : Color.Error)"
+                                 Variant="Variant.Text">
+                            @context.Status
+                        </MudChip>
+                    </MudTd>
 
-                <MudTd>Rs. @context.PurchasePrice</MudTd>
-                <MudTd>@context.Gender</MudTd>
-                <MudTd>@context.Notes</MudTd>
+                    <MudTd>Rs. @context.PurchasePrice</MudTd>
+                    <MudTd>@context.Gender</MudTd>
+                    <MudTd>@context.Notes</MudTd>
 
-                <MudTd Align="Align.Right">
+                    <MudTd Align="Align.Right">
 
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                   Color="Color.Error"
-                                   Size="Size.Small"
-                                   OnClick="@(() => RemoveLinkedGoat(context.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="@(() => RemoveLinkedGoat(context.Id))" />
 
-                </MudTd>
+                    </MudTd>
 
-            </RowTemplate>
+                </RowTemplate>
 
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20 }" />
-            </PagerContent>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20 }" />
+                </PagerContent>
 
-        </MudTable>
+            </MudTable>
 
-    </MudPaper>
+        </MudPaper>
+    }
 
 </MudContainer>
 
@@ -495,7 +501,7 @@
         }
     }
 
-    
+
 
     private async Task ReloadLinkedGoats()
     {
