@@ -308,7 +308,7 @@
                            Color="Color.Secondary"
                            Class="mt-3"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="@(()=> Nav.NavigateTo("/goat"))">
+                           OnClick="@(()=> Nav.NavigateTo("goat"))">
 
                     Cancel
 
@@ -678,7 +678,7 @@
                 if (result.IsSuccess)
                 {
                     Snackbar.Add("Goat updated successfully", Severity.Success);
-                    Nav.NavigateTo("/goat");
+                    Nav.NavigateTo("goat");
                     return;
                 }
 
@@ -691,7 +691,7 @@
                 if (result.IsSuccess)
                 {
                     Snackbar.Add("Goat created successfully", Severity.Success);
-                    Nav.NavigateTo("/goat");
+                    Nav.NavigateTo("goat");
                     return;
                 }
 

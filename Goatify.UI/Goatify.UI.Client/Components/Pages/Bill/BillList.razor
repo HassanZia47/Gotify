@@ -29,7 +29,7 @@
         </div>
 
         <MudButton StartIcon="@Icons.Material.Filled.Add"
-                   Href="/bill/add"
+                   Href="bill/add"
                    Variant="Variant.Filled"
                    Color="Color.Primary"
                    Size="Size.Medium"
@@ -102,7 +102,7 @@
                           Spacing="2"
                           Class="flex-wrap">
 
-                    <MudButton Href="/bill/deleted"
+                    <MudButton Href="bill/deleted"
                                Variant="Variant.Outlined"
                                StartIcon="@Icons.Material.Filled.DeleteOutline"
                                Color="Color.Error">
@@ -367,7 +367,7 @@
 
     private void Edit(int id)
     {
-        Nav.NavigateTo($"/bill/edit/{id}");
+        Nav.NavigateTo($"bill/edit/{id}");
     }
 
     private async Task Delete(int id)

@@ -247,7 +247,7 @@
                            Variant="Variant.Outlined"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="@(()=>Nav.NavigateTo("/breeding"))">
+                           OnClick="@(()=>Nav.NavigateTo("breeding"))">
 
                     Back
 
@@ -418,7 +418,7 @@
             if (response.IsSuccessStatusCode)
             {
                 Snackbar.Add("Saved successfully", Severity.Success);
-                Nav.NavigateTo("/breeding");
+                Nav.NavigateTo("breeding");
             }
             else
             {

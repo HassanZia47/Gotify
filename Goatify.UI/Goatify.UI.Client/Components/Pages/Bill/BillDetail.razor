@@ -287,7 +287,7 @@
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
                            Class="mt-3 rounded-pill"
-                           OnClick="@(()=> Nav.NavigateTo("/bill"))">
+                           OnClick="@(()=> Nav.NavigateTo("bill"))">
 
                     Back to Bills
 
@@ -382,7 +382,7 @@
                 response = await Http.PostAsJsonAsync("api/bill", bill);
 
             if (response.IsSuccessStatusCode)
-                Nav.NavigateTo("/bill");
+                Nav.NavigateTo("bill");
         }
         finally
         {

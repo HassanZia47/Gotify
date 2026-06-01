@@ -200,7 +200,7 @@
                            Variant="Variant.Outlined"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="@(()=> Nav.NavigateTo("/expenses"))">
+                           OnClick="@(()=> Nav.NavigateTo("expenses"))">
 
                     Cancel
 
@@ -287,7 +287,7 @@
                 response = await Http.PostAsJsonAsync("api/expense", expense);
 
             if (response.IsSuccessStatusCode)
-                Nav.NavigateTo("/expenses");
+                Nav.NavigateTo("expenses");
             else
             {
                 var error = await response.Content.ReadAsStringAsync();

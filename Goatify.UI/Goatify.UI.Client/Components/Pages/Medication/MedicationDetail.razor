@@ -160,7 +160,7 @@
                            Variant="Variant.Outlined"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="@(()=> Nav.NavigateTo("/medications"))">
+                           OnClick="@(()=> Nav.NavigateTo("medications"))">
 
                     Cancel
 
@@ -482,7 +482,7 @@
                     selectedGoats.Select(x => x.Id).ToList());
             }
 
-            Nav.NavigateTo("/medications");
+            Nav.NavigateTo("medications");
         }
         catch (Exception ex)
         {

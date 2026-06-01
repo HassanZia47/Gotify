@@ -28,7 +28,7 @@
 
         </div>
 
-        <MudButton Href="/breeding/add"
+        <MudButton Href="breeding/add"
                    Color="Color.Primary"
                    Variant="Variant.Filled"
                    StartIcon="@Icons.Material.Filled.Add"
@@ -100,7 +100,7 @@
                           Spacing="2"
                           Class="flex-wrap">
 
-                    <MudButton Href="/breeding/deleted"
+                    <MudButton Href="breeding/deleted"
                                Variant="Variant.Outlined"
                                Color="Color.Error"
                                StartIcon="@Icons.Material.Filled.DeleteOutline">
@@ -316,7 +316,7 @@
 
     private void Edit(int id)
     {
-        Nav.NavigateTo($"/breeding/edit/{id}");
+        Nav.NavigateTo($"breeding/edit/{id}");
     }
 
     private async Task ConfirmDelete(int id)

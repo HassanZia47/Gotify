@@ -106,7 +106,7 @@
             <!-- ACTIONS -->
             <MudStack Row="true" Spacing="2" Class="ml-auto">
 
-                <MudButton Href="/goat/add"
+                <MudButton Href="goat/add"
                            Color="Color.Primary"
                            Variant="Variant.Filled"
                            StartIcon="@Icons.Material.Filled.Add">
@@ -114,7 +114,7 @@
                     Add Goat
                 </MudButton>
 
-                <MudButton Href="/goat/deleted"
+                <MudButton Href="goat/deleted"
                            Color="Color.Secondary"
                            Variant="Variant.Outlined"
                            StartIcon="@Icons.Material.Filled.DeleteSweep">
@@ -329,7 +329,7 @@
     // EDIT
     private void Edit(int id)
     {
-        Nav.NavigateTo($"/goat/edit/{id}");
+        Nav.NavigateTo($"goat/edit/{id}");
     }
 
     // DELETE

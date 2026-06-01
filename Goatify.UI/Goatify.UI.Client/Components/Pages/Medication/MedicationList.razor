@@ -94,7 +94,7 @@
             <MudStack Row="true"
                       Spacing="2">
 
-                <MudButton Href="/medication/add"
+                <MudButton Href="medication/add"
                            Color="Color.Primary"
                            Variant="Variant.Filled"
                            StartIcon="@Icons.Material.Filled.Add">
@@ -102,7 +102,7 @@
                     Add Medication
                 </MudButton>
 
-                <MudButton Href="/medication/deleted"
+                <MudButton Href="medication/deleted"
                            Color="Color.Secondary"
                            Variant="Variant.Outlined"
                            StartIcon="@Icons.Material.Filled.DeleteSweep">
@@ -259,7 +259,7 @@
 
     private void Edit(int id)
     {
-        Nav.NavigateTo($"/medication/edit/{id}");
+        Nav.NavigateTo($"medication/edit/{id}");
     }
 
     private async Task Delete(int id, string name)

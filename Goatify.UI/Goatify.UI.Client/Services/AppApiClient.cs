@@ -51,7 +51,7 @@ public sealed class AppApiClient
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                _navigation.NavigateTo("/login", true);
+                _navigation.NavigateTo("login", true);
                 return ApiResult<T>.Failure("Your session expired. Please sign in again.", (int)response.StatusCode);
             }
 

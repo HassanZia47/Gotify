@@ -94,14 +94,14 @@
             <!-- ACTION BUTTONS (fixed right side) -->
             <MudStack Row="true" Spacing="2">
 
-                <MudButton Href="/expense/add"
+                <MudButton Href="expense/add"
                            Color="Color.Primary"
                            Variant="Variant.Filled"
                            StartIcon="@Icons.Material.Filled.Add">
                     Add Expense
                 </MudButton>
 
-                <MudButton Href="/expense/deleted"
+                <MudButton Href="expense/deleted"
                            Color="Color.Secondary"
                            Variant="Variant.Outlined"
                            StartIcon="@Icons.Material.Filled.Delete">
@@ -286,7 +286,7 @@
 
     private void Edit(int id)
     {
-        Nav.NavigateTo($"/expense/edit/{id}");
+        Nav.NavigateTo($"expense/edit/{id}");
     }
 
     private async Task Delete(int id)
