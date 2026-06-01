@@ -47,6 +47,7 @@ jobs:
           set -euo pipefail
           base_path="/${GITHUB_REPOSITORY#*/}/"
           api_base_url="${{ vars.API_BASE_URL }}"
+          api_base_url="${api_base_url:-https://goatify-api-hbz-cuaef0esewbvarhs.southeastasia-01.azurewebsites.net/}"
           if [ -z "$api_base_url" ]; then
             echo "::error title=Missing API_BASE_URL::Set repository variable API_BASE_URL to your deployed API URL, for example https://api.example.com/"
             exit 1
