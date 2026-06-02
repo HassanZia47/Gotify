@@ -1,4 +1,4 @@
-@page "/goat/add"
+﻿@page "/goat/add"
 @page "/goat/edit/{Id:int}"
 
 @using Goatify.Core.Models
@@ -24,7 +24,7 @@
         <div>
 
             <MudText Typo="Typo.h4" Class="fw-bold">
-                @(Id.HasValue ? "?? Edit Goat" : "? Add Goat")
+                @(Id.HasValue ? "✏️ Edit Goat" : "➕ Add Goat")
             </MudText>
 
             <MudText Typo="Typo.body2" Color="Color.Secondary">
@@ -127,7 +127,7 @@
 
                     <!-- FINANCIAL -->
                     <MudText Typo="Typo.h6" Class="mb-3">
-                        ?? Financial Details
+                        💰 Financial Details
                     </MudText>
 
                     <MudGrid Spacing="3">
@@ -162,7 +162,7 @@
 
                     <!-- SALE -->
                     <MudText Typo="Typo.h6" Class="mb-3">
-                        ?? Sale Details
+                        🛒 Sale Details
                     </MudText>
 
                     <MudGrid Spacing="3">
@@ -196,7 +196,7 @@
 
                     <!-- NOTES -->
                     <MudText Typo="Typo.h6" Class="mb-3">
-                        ?? Notes
+                        📝 Notes
                     </MudText>
 
                     <MudTextField T="string"
@@ -333,7 +333,7 @@
             <div>
 
                 <MudText Typo="Typo.h6" Class="fw-bold">
-                    ?? Assigned Medications
+                        💊 Assigned Medications
                 </MudText>
 
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
@@ -436,7 +436,7 @@
             <div>
 
                 <MudText Typo="Typo.h6" Class="fw-bold">
-                    ?? Mating History
+                        🐐 Mating History
                 </MudText>
 
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
